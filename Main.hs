@@ -7,17 +7,32 @@
     GeneralizedNewtypeDeriving,
     FlexibleContexts #-}
 
-import Data.Text (Text)
+import Control.Monad.IO.Class (liftIO)
 import Database.Persist
 import Database.Persist.Sqlite (runSqlite, runMigration)
 import Database.Persist.TH
 
 share [mkPersist sqlSettings, mkMigrate "migrateTables"] [persistLowerCase|
-Tutorial
-    title   Text
-    url     Text
-    school  Bool
-    deriving Show
+Person
+    name String
+    age Int Maybe
+        deriving (Show)
+BlogPost
+    title String
+    authorId PersonId
+        deriving (Show)
 |]
 
-main = return ()
+main :: IO ()
+main = runSqlite ":memory:" $ do
+    runMigration migrateTables
+    johnid <- insert $ Person "John Doe" (Just 30)
+    janeid <- insert $ Person "Jane bab" Nothing
+    insert $ BlogPost "Yea daddy" johnid
+    insert $ BlogPost "Bye man" janeid
+    johnpost <- selectList [BlogPostAuthorId ==. johnid] [LimitTo 1]
+    john <- get johnid
+    liftIO $ print (john :: Maybe Person)
+    delete janeid
+    deleteWhere [BlogPostAuthorId ==. johnid]
+

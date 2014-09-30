@@ -26,9 +26,11 @@ Task
 main = runSqlite ":memory:" $ do
     runMigration tasks
     insert_ $ Task "payload1" "http://yahoo.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1982" :: UTCTime)
-    insert_ $ Task "payload2" "http://bb.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1982" :: UTCTime)
-    insert_ $ Task "payload3" "http://happyfox.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1982" :: UTCTime)
-    insert_ $ Task "payload4" "http://tenmiles.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1982" :: UTCTime)
+    insert_ $ Task "payload2" "http://bb.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1983" :: UTCTime)
+    insert_ $ Task "payload3" "http://happyfox.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1984" :: UTCTime)
+    insert_ $ Task "payload4" "http://tenmiles.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1985" :: UTCTime)
     (task:_) <- selectList [TaskPayload ==. "payload3"] []
-    liftIO $ print $ entityVal task
+    {-liftIO $ print $ entityVal task-}
+    tasks' <- selectList [TaskAttime <=. (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1984")] []
+    liftIO $ mapM_ (print . entityVal) tasks'
 

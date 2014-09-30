@@ -7,36 +7,28 @@
     GeneralizedNewtypeDeriving,
     FlexibleContexts #-}
 
+import Data.Text
+import Data.Time
+import System.Locale (defaultTimeLocale)
 import Control.Monad.IO.Class (liftIO)
 import Database.Persist as Per
 import Database.Persist.Sqlite (runSqlite, runMigration)
 import Database.Persist.TH
-import Data.Maybe (fromJust)
 
-share [mkPersist sqlSettings, mkMigrate "migrateTables"] [persistLowerCase|
-Person
-    name String
-    age Int Maybe
-        deriving (Show)
-BlogPost
-    title String
-    authorId PersonId
+share [mkPersist sqlSettings, mkMigrate "tasks"] [persistLowerCase|
+Task
+    payload Text
+    posttourl Text
+    attime UTCTime
         deriving (Show)
 |]
 
-main :: IO ()
 main = runSqlite ":memory:" $ do
-    runMigration migrateTables
-    johnid <- insert $ Person "John Doe" (Just 30)
-    janeid <- insert $ Person "Jane bab" Nothing
-    insert_ $ Person "Blade raj" (Just 27)
-    insert $ BlogPost "Yea daddy" johnid
-    insert $ BlogPost "Bye man" janeid
-    johnpost <- selectList [BlogPostAuthorId ==. johnid] [LimitTo 1]
-    bladeraj <- selectFirst [Filter PersonName (Right ["Blade raj"]) Per.Eq] []
-    liftIO $ print $ entityVal $ fromJust bladeraj
-    john <- get johnid
-    liftIO $ print (john :: Maybe Person)
-    delete janeid
-    deleteWhere [BlogPostAuthorId ==. johnid]
+    runMigration tasks
+    insert_ $ Task "payload1" "http://yahoo.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1982" :: UTCTime)
+    insert_ $ Task "payload2" "http://bb.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1982" :: UTCTime)
+    insert_ $ Task "payload3" "http://happyfox.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1982" :: UTCTime)
+    insert_ $ Task "payload4" "http://tenmiles.com" (readTime defaultTimeLocale "%d/%m/%Y" "24/12/1982" :: UTCTime)
+    (task:_) <- selectList [TaskPayload ==. "payload3"] []
+    liftIO $ print $ entityVal task
 

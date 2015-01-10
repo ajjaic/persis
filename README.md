@@ -1,1 +1,1 @@
-A task server that enables POST request with json payload at a certain time
+A demo project to simply learn how to use the persistent library
